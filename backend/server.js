@@ -236,7 +236,10 @@ app.use(cors({
   origin: ['https://snapshop.b-cdn.net', 'http://localhost:3001', 'http://localhost:5500']
 }));
 app.use(express.json());
-
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 if (fs.existsSync(FRONTEND_PATH)) {
   app.use(express.static(FRONTEND_PATH));
   console.log('✅ Serving frontend from', FRONTEND_PATH);
