@@ -232,7 +232,9 @@ function initDB() {
 }
 initDB();
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://snapshop.b-cdn.net', 'http://localhost:3001', 'http://localhost:5500']
+}));
 app.use(express.json());
 
 if (fs.existsSync(FRONTEND_PATH)) {
