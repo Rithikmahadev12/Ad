@@ -1,0 +1,8 @@
+{
+  "name": "dollartree-store",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node backend/server.js",
+    "install-deps": "cd backend && npm install"
+  }
+}
