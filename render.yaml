@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: dollartree-store
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+    disk:
+      name: store-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
