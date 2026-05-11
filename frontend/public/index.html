@@ -578,9 +578,7 @@ tr:hover td{background:rgba(91,142,240,0.04)}
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────
-const BACKEND = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3001'
-  : 'https://ad-04gz.onrender.com';
+const BACKEND = '';
 let products = [];
 let cart = JSON.parse(localStorage.getItem('qm_cart') || '[]');
 let currentCat = 'All';
