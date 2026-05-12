@@ -16,10 +16,12 @@ const FRONTEND_PATH = path.join(__dirname, '..', 'frontend', 'public');
 
 // ── EMAIL SETUP ──────────────────────────────────────────────────────────────
 const mailer = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: 'rithikxjay@gmail.com',
-    pass: process.env.EMAIL_PASS   // set EMAIL_PASS in your .env or Render env vars (use Gmail App Password)
+    pass: process.env.EMAIL_PASS
   }
 });
 
