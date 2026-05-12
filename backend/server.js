@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,6 +14,61 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dollartree_secret_key_2024';
 const DB_PATH = path.join(__dirname, 'data.json');
 const FRONTEND_PATH = path.join(__dirname, '..', 'frontend', 'public');
 
+// ── EMAIL SETUP ──────────────────────────────────────────────────────────────
+const mailer = nodemailer.createTransport({
+  service: 'yahoo',
+  auth: {
+    user: 'jayrithik@yahoo.com',
+    pass: process.env.EMAIL_PASS   // set EMAIL_PASS in your .env or Render env vars
+  }
+});
+
+function sendOrderEmail(order) {
+  const itemLines = order.items
+    .map(i => `  ${i.image}  ${i.name} x${i.qty}  —  $${(i.price * i.qty).toFixed(2)}`)
+    .join('\n');
+
+  const placed = new Date(order.created_at).toLocaleString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  const mailOptions = {
+    from: 'jayrithik@yahoo.com',
+    to: [
+      'jayrithik@yahoo.com',
+      '496156@bsd48.org',
+      '520657@bsd48.org',
+      '493566@bsd48.org',
+      '493636@bsd48.org',
+    ].join(','),
+    subject: `🛒 New SnapShop Order #${order.id} — $${parseFloat(order.total).toFixed(2)}`,
+    text: [
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      `  NEW ORDER — SnapShop`,
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      `Order #:    ${order.id}`,
+      `Customer:   ${order.customer_email}`,
+      `Placed:     ${placed}`,
+      '',
+      'Items:',
+      itemLines,
+      '',
+      `Total:      $${parseFloat(order.total).toFixed(2)}`,
+      `Status:     Pending`,
+      '',
+      'Log in to your dashboard to update the order status.',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ].join('\n')
+  };
+
+  mailer.sendMail(mailOptions, (err, info) => {
+    if (err) console.error('❌ Email error:', err.message);
+    else console.log('📧 Order email sent:', info.response);
+  });
+}
+
+// ── DATABASE ─────────────────────────────────────────────────────────────────
 function readDB() {
   if (!fs.existsSync(DB_PATH)) return null;
   try { return JSON.parse(fs.readFileSync(DB_PATH, 'utf8')); } catch { return null; }
@@ -232,6 +288,7 @@ function initDB() {
 }
 initDB();
 
+// ── MIDDLEWARE ───────────────────────────────────────────────────────────────
 app.use(cors({
   origin: ['https://snapshop.b-cdn.net', 'http://localhost:3001', 'http://localhost:5500']
 }));
@@ -254,7 +311,7 @@ function authMiddleware(req, res, next) {
   catch { res.status(401).json({ error: 'Invalid token' }); }
 }
 
-// ── AUTH ──
+// ── AUTH ─────────────────────────────────────────────────────────────────────
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const db = readDB();
@@ -265,7 +322,7 @@ app.post('/api/login', (req, res) => {
   res.json({ token, username: owner.username });
 });
 
-// ── PRODUCTS ──
+// ── PRODUCTS ─────────────────────────────────────────────────────────────────
 app.get('/api/products', (req, res) => {
   const db = readDB();
   res.json([...db.products].sort((a,b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)));
@@ -297,14 +354,25 @@ app.delete('/api/products/:id', authMiddleware, (req, res) => {
   res.json({ success: true });
 });
 
-// ── ORDERS ──
+// ── ORDERS ───────────────────────────────────────────────────────────────────
 app.post('/api/orders', (req, res) => {
   const { email, items, total } = req.body;
   if (!email || !items?.length || !total) return res.status(400).json({ error: 'Missing required fields' });
   const db = readDB();
-  const order = { id: db.nextOrderId++, customer_email: email, items, total, status: 'pending', created_at: new Date().toISOString() };
+  const order = {
+    id: db.nextOrderId++,
+    customer_email: email,
+    items,
+    total,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  };
   db.orders.push(order);
   writeDB(db);
+
+  // 📧 Send email notification (non-blocking)
+  sendOrderEmail(order);
+
   res.json({ id: order.id, message: 'Order placed!' });
 });
 
@@ -322,7 +390,7 @@ app.put('/api/orders/:id/status', authMiddleware, (req, res) => {
   res.json({ success: true });
 });
 
-// ── FALLBACK ──
+// ── FALLBACK ─────────────────────────────────────────────────────────────────
 app.get('*', (req, res) => {
   const idx = path.join(FRONTEND_PATH, 'index.html');
   if (fs.existsSync(idx)) res.sendFile(idx);
