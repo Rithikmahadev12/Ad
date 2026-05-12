@@ -16,10 +16,10 @@ const FRONTEND_PATH = path.join(__dirname, '..', 'frontend', 'public');
 
 // ── EMAIL SETUP ──────────────────────────────────────────────────────────────
 const mailer = nodemailer.createTransport({
-  service: 'yahoo',
+  service: 'gmail',
   auth: {
-    user: 'jayrithik@yahoo.com',
-    pass: process.env.EMAIL_PASS   // set EMAIL_PASS in your .env or Render env vars
+    user: 'rithikxjay@gmail.com',
+    pass: process.env.EMAIL_PASS   // set EMAIL_PASS in your .env or Render env vars (use Gmail App Password)
   }
 });
 
@@ -34,9 +34,9 @@ function sendOrderEmail(order) {
   });
 
   const mailOptions = {
-    from: 'jayrithik@yahoo.com',
+    from: 'rithikxjay@gmail.com',
     to: [
-      'jayrithik@yahoo.com',
+      'rithikxjay@gmail.com',
       '496156@bsd48.org',
       '520657@bsd48.org',
       '493566@bsd48.org',
